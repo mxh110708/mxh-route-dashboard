@@ -585,6 +585,8 @@ export function AdaptiveSegmented(props: {
   options: { value: string; label: string }[];
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
+  ariaLabel?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -607,7 +609,12 @@ export function AdaptiveSegmented(props: {
   }, [props.options]);
 
   return (
-    <div ref={containerRef}>
+    <div
+      ref={containerRef}
+      role="group"
+      aria-label={props.ariaLabel}
+      aria-busy={props.disabled || undefined}
+    >
       <div className="segmented-measure" aria-hidden ref={measureRef}>
         <div className="segmented" style={{ height: "auto" }}>
           {props.options.map((option) => (
@@ -624,6 +631,8 @@ export function AdaptiveSegmented(props: {
               type="button"
               key={option.value}
               className={option.value === props.value ? "active" : ""}
+              aria-pressed={option.value === props.value}
+              disabled={props.disabled}
               onClick={() => {
                 if (option.value !== props.value) {
                   props.onChange(option.value);
@@ -635,7 +644,12 @@ export function AdaptiveSegmented(props: {
           ))}
         </div>
       ) : (
-        <Select options={props.options} value={props.value} onChange={props.onChange} />
+        <Select
+          options={props.options}
+          value={props.value}
+          disabled={props.disabled}
+          onChange={props.onChange}
+        />
       )}
     </div>
   );

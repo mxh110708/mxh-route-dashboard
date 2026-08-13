@@ -123,6 +123,13 @@ export const TRANSLATIONS = {
   "Outbound": { "zh-Hans": "出站", "zh-Hant": "出站", "fa": "خروجی", "ru": "Исходящий" },
   "Mode": { "zh-Hans": "模式", "zh-Hant": "模式", "fa": "حالت", "ru": "Режим" },
   "Clash Mode": { "zh-Hans": "Clash 模式", "zh-Hant": "Clash 模式", "fa": "حالت Clash", "ru": "Режим Clash" },
+  "Routing Mode": { "zh-Hans": "路由模式", "zh-Hant": "路由模式", "fa": "حالت مسیریابی", "ru": "Режим маршрутизации" },
+  "Traffic Capture": { "zh-Hans": "流量接管", "zh-Hant": "流量接管", "fa": "هدایت ترافیک", "ru": "Перехват трафика" },
+  "Rule": { "zh-Hans": "规则", "zh-Hant": "規則", "fa": "قانون", "ru": "Правила" },
+  "Global": { "zh-Hans": "全局", "zh-Hant": "全域", "fa": "سراسری", "ru": "Глобальный" },
+  "Direct": { "zh-Hans": "直连", "zh-Hant": "直連", "fa": "مستقیم", "ru": "Напрямую" },
+  "System Proxy": { "zh-Hans": "系统代理", "zh-Hant": "系統代理", "fa": "پروکسی سیستم", "ru": "Системный прокси" },
+  "TUN Mode": { "zh-Hans": "TUN 模式", "zh-Hant": "TUN 模式", "fa": "حالت TUN", "ru": "Режим TUN" },
   "Reset": { "zh-Hans": "重置", "zh-Hant": "重置", "fa": "بازنشانی", "ru": "Сброс" },
   "Done": { "zh-Hans": "完成", "zh-Hant": "完成", "fa": "انجام شد", "ru": "Готово" },
 

@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { formatBytes, formatMemoryBytes } from "../api/format";
 import { useStream } from "../api/stream";
 import { useApi } from "../app/context";
-import { useLocalDesktopHost } from "../app/desktop";
+import { useDesktopProfiles, useLocalDesktopHost } from "../app/desktop";
 import type { DesktopHost } from "../app/desktop";
 import { showError } from "../app/errorStore";
 import { usePendingValue } from "../app/hooks";
@@ -24,7 +24,7 @@ import { PageHeader } from "../components/PageHeader";
 import { StreamBanner } from "../components/StreamBanner";
 import { AdaptiveSegmented, Button, Card, DataLine, Dialog, EmptyState, IconButton, Sparkline } from "../components/ui";
 import { ServiceStatus_Type } from "../gen/daemon/started_service_pb";
-import { ProfileCard, SystemProxyCard } from "./ProfileViews";
+import { ProfileCard } from "./ProfileViews";
 import styles from "./OverviewView.module.css";
 import { cx } from "../lib/cx";
 
@@ -79,6 +79,9 @@ export function OverviewView() {
       ) : host !== null ? (
         <div className={styles.cardGrid}>
           {orderedEnabledCards(cardsConfig).includes("profile") && <ProfileCard host={host} />}
+          {orderedEnabledCards(cardsConfig).includes("systemProxy") && (
+            <CaptureModeCard host={host} />
+          )}
         </div>
       ) : (
         stateLabel !== null && <EmptyState icon="dashboard">{stateLabel}</EmptyState>
@@ -153,15 +156,30 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
         if (props.host === null) {
           return null;
         }
-        return <SystemProxyCard key={card} host={props.host} />;
+        return <CaptureModeCard key={card} host={props.host} />;
       case "clashMode":
         if (modeList.length <= 1) {
           return null;
         }
         return (
-          <Card key={card} icon="route" title={t("Mode")} wide>
+          <Card key={card} icon="route" title={t("Routing Mode")} wide>
             <AdaptiveSegmented
-              options={modeList.map((mode) => ({ value: mode, label: mode }))}
+              ariaLabel={t("Routing Mode")}
+              options={modeList.map((mode) => {
+                let label = mode;
+                switch (mode.toLowerCase()) {
+                  case "rule":
+                    label = t("Rule");
+                    break;
+                  case "global":
+                    label = t("Global");
+                    break;
+                  case "direct":
+                    label = t("Direct");
+                    break;
+                }
+                return { value: mode, label };
+              })}
               value={currentMode}
               onChange={(mode) => {
                 setPendingMode(mode);
@@ -184,6 +202,41 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
   };
 
   return <div className={styles.cardGrid}>{orderedEnabledCards(props.config).map(renderCard)}</div>;
+}
+
+function CaptureModeCard(props: { host: DesktopHost }) {
+  const { t } = useI18n();
+  const { captureMode } = useDesktopProfiles(props.host);
+  const [currentMode, setPendingMode] = usePendingValue(captureMode);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <Card icon="router" title={t("Traffic Capture")} wide>
+      <AdaptiveSegmented
+        ariaLabel={t("Traffic Capture")}
+        options={[
+          { value: "system-proxy", label: t("System Proxy") },
+          { value: "tun", label: t("TUN Mode") },
+        ]}
+        value={currentMode}
+        disabled={busy}
+        onChange={(mode) => {
+          if (mode !== "system-proxy" && mode !== "tun") {
+            return;
+          }
+          setPendingMode(mode);
+          setBusy(true);
+          props.host.profiles
+            .setCaptureMode(mode)
+            .catch((error: unknown) => {
+              setPendingMode(null);
+              showError(error);
+            })
+            .finally(() => setBusy(false));
+        }}
+      />
+    </Card>
+  );
 }
 
 function CardManagementDialog(props: {
