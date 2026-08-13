@@ -27,8 +27,8 @@ export const DASHBOARD_CARDS: Record<
   downloadTraffic: { title: "Download", icon: "download", pairGroup: "traffic" },
   status: { title: "Status", icon: "bug_report", pairGroup: "statistics" },
   connections: { title: "Connections", icon: "cable", pairGroup: "statistics" },
-  systemProxy: { title: "System HTTP Proxy", icon: "router", desktop: true },
-  clashMode: { title: "Clash Mode", icon: "route" },
+  systemProxy: { title: "Traffic Capture", icon: "router", desktop: true },
+  clashMode: { title: "Routing Mode", icon: "route" },
   profile: { title: "Profile", icon: "folder", desktop: true, permanent: true },
 };
 

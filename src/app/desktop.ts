@@ -25,6 +25,7 @@ export interface DaemonConnectionState {
 }
 
 export type DesktopProfileType = "local" | "remote";
+export type DesktopCaptureMode = "system-proxy" | "tun";
 
 export interface DesktopProfile {
   id: string;
@@ -39,6 +40,7 @@ export interface DesktopProfile {
 export interface DesktopProfilesState {
   selectedId: string | null;
   profiles: DesktopProfile[];
+  captureMode: DesktopCaptureMode;
 }
 
 export interface DesktopServer {
@@ -312,6 +314,7 @@ export interface DesktopHost {
     readContent(id: string): Promise<string>;
     writeContent(id: string, content: string): Promise<void>;
     updateRemote(id: string): Promise<void>;
+    setCaptureMode(mode: DesktopCaptureMode): Promise<void>;
     pickImportFile(): Promise<{ fileName: string; data: Uint8Array } | null>;
     exportFile(id: string): Promise<boolean>;
     importData(fileName: string, data: Uint8Array): Promise<void>;
@@ -468,7 +471,11 @@ export function useRemoteSession(
 }
 
 export function useDesktopProfiles(host: DesktopHost): DesktopProfilesState {
-  const [state, setState] = useState<DesktopProfilesState>({ selectedId: null, profiles: [] });
+  const [state, setState] = useState<DesktopProfilesState>({
+    selectedId: null,
+    profiles: [],
+    captureMode: "tun",
+  });
 
   useEffect(() => {
     let stale = false;
