@@ -1,9 +1,9 @@
 {
-  "name": "sing-box-dashboard",
+  "name": "mxh-route-dashboard",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "packageManager": "pnpm@11.13.0",
+  "packageManager": "pnpm@11.19.0",
   "exports": {
     ".": "./src/App.tsx",
     "./tray": "./src/TrayMenu.tsx",

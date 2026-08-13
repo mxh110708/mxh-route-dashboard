@@ -1,33 +1,17 @@
-# sing-box dashboard
+# MXH Route Dashboard
 
-Web dashboard for sing-box.
+Dashboard source for the personal MXH Route Windows client. It is derived from
+[`SagerNet/sing-box-dashboard`](https://github.com/SagerNet/sing-box-dashboard)
+and is not an official SagerNet release.
 
-## Public instance
+The maintained changes provide the desktop Overview controls for routing mode
+and traffic capture, plus the independent MXH Route branding. Protocol names,
+API compatibility, and upstream technical documentation still use the
+`sing-box` name where required.
 
-http://sing-box-dashboard.sagernet.org
+The dashboard is embedded by
+[`mxh110708/mxh-route-desktop`](https://github.com/mxh110708/mxh-route-desktop).
+No VPS profile, credential, token, private key, or code-signing material belongs
+in this repository.
 
-For Chrome, you can use HTTPS, but not for other browsers.
-
-Shortcut: dash.sing-box.app
-
-## LICENSE
-
-```
-Copyright (C) 2022 by nekohasekai <contact-sagernet@sekai.icu>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-In addition, no derivative work may use the name or imply association
-with this application without prior consent.
-```
+See [LICENSE](LICENSE) for the retained upstream license and naming condition.
