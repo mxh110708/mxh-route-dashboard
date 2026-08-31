@@ -123,6 +123,7 @@ export interface DesktopUpdateInfo {
 
 export interface DesktopUpdatesState {
   supported: boolean;
+  githubTokenSupported: boolean;
   track: DesktopUpdateTrack;
   checkUpdateEnabled: boolean;
   prompted: boolean;
