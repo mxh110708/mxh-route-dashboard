@@ -124,11 +124,11 @@
 
 @media (max-width: 720px) {
   .group-items {
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 
   .group-card :global(.card-header) {
-      padding: var(--space-14) var(--space-14) var(--space-12);
-      margin: calc(-1 * var(--space-14)) calc(-1 * var(--space-14)) 0;
-    }
+    padding: var(--space-14) var(--space-14) var(--space-12);
+    margin: calc(-1 * var(--space-14)) calc(-1 * var(--space-14)) 0;
+  }
 }

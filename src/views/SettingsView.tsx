@@ -371,10 +371,12 @@ function UpdateSettingsSection({ host }: { host: DesktopHost }) {
             />
           </div>
         )}
-        <button type="button" className="settings-row" onClick={editGitHubToken}>
-          <span className="settings-row-label">{t("GitHub Token")}</span>
-          <Icon name="keyboard_arrow_right" size={14} />
-        </button>
+        {updates.githubTokenSupported && (
+          <button type="button" className="settings-row" onClick={editGitHubToken}>
+            <span className="settings-row-label">{t("GitHub Token")}</span>
+            <Icon name="keyboard_arrow_right" size={14} />
+          </button>
+        )}
         <div className="settings-row">
           <span className="settings-row-label">{t("Automatic Update Check")}</span>
           <button
@@ -419,7 +421,7 @@ function UpdateSettingsSection({ host }: { host: DesktopHost }) {
           </div>
         </Dialog>
       )}
-      {githubTokenVisible && (
+      {updates.githubTokenSupported && githubTokenVisible && (
         <Dialog
           onClose={() => {
             if (!githubTokenBusy) {
