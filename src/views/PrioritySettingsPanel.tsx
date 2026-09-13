@@ -80,10 +80,11 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
       </div>
       {conflict && <p role="alert">配置文件或当前配置已在其他位置变化，请刷新后再保存。</p>}
       {dirty && <p>有未保存修改，当前运行策略不受影响。</p>}
-      <Field label="目标入口分组"><Select value={draft.group} disabled={busy} options={[
-        ...(!view.groups.some(group => group.tag === draft.group) ? [{ value: draft.group, label: `${draft.group}（当前配置中不存在）` }] : []),
+      {draft.group && !view.groups.some(group => group.tag === draft.group) && <p role="alert">已保存的分组“{draft.group}”不存在或不符合入口代理组结构，请重新选择；不会自动改用其他分组。</p>}
+      <Field label="目标入口分组"><Select value={view.groups.some(group => group.tag === draft.group) ? draft.group : ""} placeholder="请选择入口代理组" disabled={busy} options={[
         ...view.groups.map(group => ({ value: group.tag, label: group.tag })),
       ]} onChange={group => { change({ group, order: [] }); setCustom(false); }} /></Field>
+      <p>从当前代理配置读取，仅列出成员全部为实际代理节点的分组；业务、汇总、直连和混合分组不参与。{view.groups.length === 0 && "当前配置没有符合条件的入口组。"}</p>
       <label className={styles.mode}><input type="checkbox" checked={custom} disabled={busy} onChange={event => {
         setCustom(event.target.checked); change({ order: event.target.checked ? [...nodes] : [] });
       }} />自定义优先级（否则跟随组内排列）</label>
