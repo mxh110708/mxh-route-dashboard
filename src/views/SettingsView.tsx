@@ -70,8 +70,14 @@ export function SettingsView() {
             title={host !== null ? t("Remote Control") : t("Servers")}
             onClick={() => navigate("settings/servers")}
           />
+          {localHost?.profiles.priorityState && (
+            <NavRow
+              icon="tune"
+              title="自动故障切换"
+              onClick={() => navigate("settings/priority-failover")}
+            />
+          )}
         </div>
-        {localHost?.profiles.priorityState && <PrioritySettingsPanel host={localHost} />}
         <div>
           <div className="list-section-title">{t("About")}</div>
           <div className="nav-list">
@@ -110,6 +116,22 @@ export function SettingsView() {
             />
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+export function PrioritySettingsView() {
+  const host = useLocalDesktopHost();
+  return (
+    <div className="page">
+      <SettingsPageHeader title="自动故障切换" />
+      <div className="settings-stack">
+        {host?.profiles.priorityState ? (
+          <PrioritySettingsPanel host={host} />
+        ) : (
+          <p>当前环境不支持本地自动故障切换设置。</p>
+        )}
       </div>
     </div>
   );
