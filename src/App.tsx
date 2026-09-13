@@ -87,6 +87,7 @@ import {
 } from "./views/ProfileViews";
 import {
   AppSettingsView,
+  PrioritySettingsView,
   CoreView,
   PreferencesView,
   ServersView,
@@ -133,6 +134,7 @@ export type Route =
   | { page: "settings" }
   | { page: "settings/app" }
   | { page: "settings/core" }
+  | { page: "settings/priority-failover" }
   | { page: "settings/preferences" }
   | { page: "settings/preferences/terminal" }
   | { page: "settings/preferences/terminal/theme"; scheme: "light" | "dark" }
@@ -252,6 +254,8 @@ function routeFromHash(locationHash: string): Route {
           return { page: "settings/app" };
         case "core":
           return { page: "settings/core" };
+        case "priority-failover":
+          return { page: "settings/priority-failover" };
         case "preferences":
           if (segments[2] === "terminal") {
             if (segments[3] === "theme" && (segments[4] === "light" || segments[4] === "dark")) {
@@ -354,6 +358,8 @@ function routeTitle(route: Route, t: Translate, language: string): string {
       return t("App");
     case "settings/core":
       return t("Core");
+    case "settings/priority-failover":
+      return "自动故障切换";
     case "settings/preferences":
       return t("Preferences");
     case "settings/preferences/terminal":
@@ -909,6 +915,7 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
         />
       )}
       {route.page === "settings/core" && <CoreView />}
+      {route.page === "settings/priority-failover" && <PrioritySettingsView />}
       {route.page === "settings/preferences" && (
         <PreferencesView
           theme={props.theme}
