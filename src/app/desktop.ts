@@ -27,6 +27,34 @@ export interface DaemonConnectionState {
 export type DesktopProfileType = "local" | "remote";
 export type DesktopCaptureMode = "system-proxy" | "tun";
 
+export interface DesktopPrioritySettings {
+  enabled: boolean;
+  group: string;
+  order: string[];
+  failureRounds: number;
+  backupSuccessRounds: number;
+  recoverySuccessRounds: number;
+  recoveryStableMs: number;
+  failbackCooldownMs: number;
+  probeTimeoutMs: number;
+  healthyIntervalMs: number;
+  failureIntervalMs: number;
+}
+export interface DesktopPriorityState {
+  settings: DesktopPrioritySettings;
+  revision: string;
+  profileId: string | null;
+  groups: { tag: string; nodes: string[] }[];
+  path: string;
+  running: boolean;
+  directMode: boolean;
+  active: boolean;
+  paused: boolean;
+  needsReload: boolean;
+  selected: string | null;
+  lastSwitch: { from: string; to: string; at: string; reason: string } | null;
+}
+
 export interface DesktopProfile {
   id: string;
   name: string;
@@ -306,6 +334,9 @@ export interface DesktopHost {
     triggerOOMReport(): Promise<void>;
   };
   profiles: {
+    priorityState?(): Promise<DesktopPriorityState>;
+    prioritySave?(settings: DesktopPrioritySettings, revision: string, profileId: string | null): Promise<DesktopPriorityState>;
+    priorityApply?(revision: string, profileId: string | null): Promise<void>;
     list(): Promise<DesktopProfilesState>;
     onChanged(listener: () => void): () => void;
     create(init: DesktopProfileCreate): Promise<void>;
