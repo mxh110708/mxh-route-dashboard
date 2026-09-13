@@ -36,6 +36,7 @@ import { parseCustomTheme, type Scheme, type TerminalThemeEntry } from "../lib/t
 import { openUpdateDialog, useUpdatesState } from "./UpdateViews";
 import styles from "./SettingsView.module.css";
 import { cx } from "../lib/cx";
+import { PrioritySettingsPanel } from "./PrioritySettingsPanel";
 
 export function SettingsView() {
   const { t } = useI18n();
@@ -70,6 +71,7 @@ export function SettingsView() {
             onClick={() => navigate("settings/servers")}
           />
         </div>
+        {localHost?.profiles.priorityState && <PrioritySettingsPanel host={localHost} />}
         <div>
           <div className="list-section-title">{t("About")}</div>
           <div className="nav-list">

@@ -1,0 +1,80 @@
+.panel {
+  display: grid;
+  gap: var(--space-16);
+  padding: var(--space-20);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.heading,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heading h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.actions {
+  justify-content: flex-start;
+}
+
+.panel p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.panel p[role="alert"] {
+  color: var(--danger);
+}
+
+.status,
+.nodes {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.nodes {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.nodes li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-12);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.node-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: var(--space-16);
+  margin-top: var(--space-12);
+}
+
+.mode {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.path {
+  overflow-wrap: anywhere;
+}
