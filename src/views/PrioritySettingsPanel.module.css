@@ -2,6 +2,8 @@
   display: grid;
   gap: var(--space-16);
   padding: var(--space-20);
+  font-size: var(--text-base);
+  font-weight: var(--weight-normal);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
 }
@@ -17,7 +19,13 @@
 
 .heading h2 {
   margin: 0;
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
+  font-weight: var(--weight-normal);
+}
+
+.status strong,
+.panel :global(.field-label) {
+  font-weight: var(--weight-normal);
 }
 
 .actions {
