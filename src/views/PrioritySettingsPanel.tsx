@@ -13,7 +13,7 @@ const numbers: { key: NumberKey; label: string; min: number; max: number; second
   { key: "failbackCooldownMs", label: "切回冷却时间（秒）", min: 10, max: 3600, seconds: true },
   { key: "probeTimeoutMs", label: "单次探测超时（秒）", min: 1, max: 60, seconds: true },
   { key: "healthyIntervalMs", label: "正常时轮间等待（秒）", min: 5, max: 600, seconds: true },
-  { key: "failureIntervalMs", label: "异常时轮间等待（秒）", min: 5, max: 600, seconds: true },
+  { key: "failureIntervalMs", label: "常规异常轮间等待（秒）", min: 5, max: 600, seconds: true },
 ];
 
 export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
@@ -102,7 +102,7 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
       </ol>
       {custom && nodes.some(tag => !order.includes(tag)) && <Field label="加入备用节点"><Select value="" placeholder="选择要加入的节点" disabled={busy}
         options={nodes.filter(tag => !order.includes(tag)).map(tag => ({ value: tag, label: tag }))} onChange={tag => change({ order: [...order, tag] })} /></Field>}
-      <p>可拖动或使用上下按钮排序。全部失败时不会转为直连；手动选节点会暂停自动切换。</p>
+      <p>可拖动或使用上下按钮排序。当前节点首次失败后会连续复核，再按设定轮数切换；全部失败时不会转为直连。手动选节点会暂停自动切换。</p>
       <details><summary>高级参数</summary><div className={styles.grid}>
         {numbers.map(item => <Field key={item.key} label={`${item.label} · ${item.min}–${item.max}`}><input className="input" type="number" min={item.min} max={item.max} step={1} disabled={busy}
           value={Number.isFinite(draft[item.key]) ? draft[item.key] / (item.seconds ? 1000 : 1) : ""}
