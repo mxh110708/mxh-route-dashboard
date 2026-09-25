@@ -49,7 +49,8 @@ export interface DesktopPriorityState {
   running: boolean;
   directMode: boolean;
   active: boolean;
-  paused: boolean;
+  preferred: string | null;
+  monitoredSelected: boolean;
   needsReload: boolean;
   selected: string | null;
   lastSwitch: { from: string; to: string; at: string; reason: string } | null;

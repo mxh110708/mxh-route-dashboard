@@ -67,14 +67,15 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
     catch (reason) { setError(`已保存，但未确认重载完成：${String(reason)}`); } finally { mutating.current = false; setBusy(false); }
   };
   return <section className={styles.panel} aria-labelledby="priority-title">
-    <div className={styles.heading}><div><h2 id="priority-title">自动故障切换</h2><p>按优先级选择入口，首选稳定恢复后切回。不以最低延迟排名。</p></div>
+    <div className={styles.heading}><div><h2 id="priority-title">自动故障切换</h2><p>按优先级选择入口，手动选择可改变当前首选；稳定恢复后切回。不以最低延迟排名。</p></div>
       {draft && <button className={draft.enabled ? "switch on" : "switch"} role="switch" aria-label="启用自动故障切换" aria-checked={draft.enabled} disabled={busy} onClick={() => change({ enabled: !draft.enabled })} />}
     </div>
     {error && <p role="alert">{error}</p>}
     {!draft || !view || !base ? <p>正在读取策略配置…</p> : <>
       <div className={styles.status} aria-live="polite">
-        <strong>{!view.running ? "代理未运行" : view.directMode ? "Direct 模式下已暂停" : !view.active ? "监测未启用" : view.paused ? "手动选择后已暂停" : "自动监测中"}</strong>
+        <strong>{!view.running ? "代理未运行" : view.directMode ? "Direct 模式下已暂停" : !view.active ? "监测未启用" : view.selected && !view.monitoredSelected ? "当前节点未纳入自动切换顺序" : view.selected && view.preferred && view.selected !== view.preferred ? "备用运行中，等待首选恢复" : "自动监测中"}</strong>
         <span>当前运行节点：{view.selected ?? "—"}</span>
+        {view.active && <span>当前首选：{view.preferred ?? "—"}</span>}
         {view.needsReload && <span>有待重载的策略配置</span>}
         {view.lastSwitch && <span>最近切换：{view.lastSwitch.from} → {view.lastSwitch.to} · {view.lastSwitch.reason} · {new Date(view.lastSwitch.at).toLocaleTimeString()}</span>}
       </div>
@@ -92,7 +93,7 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
         {order.map((tag, index) => <li key={tag} draggable={custom && !busy} onDragStart={event => { dragging.current = index; event.dataTransfer.setData("text/plain", String(index)); }} onDragEnd={() => { dragging.current = null; }}
           onDragOver={event => { if (custom && !busy) event.preventDefault(); }} onDrop={event => {
             event.preventDefault(); if (custom && !busy && dragging.current !== null) change({ order: movePriorityNode(order, dragging.current, index) }); dragging.current = null;
-          }}><span className={styles.nodeName}>{index === 0 ? "首选" : `备用 ${index}`} · {tag}</span>
+          }}><span className={styles.nodeName}>{index === 0 ? "配置首选" : `配置备用 ${index}`} · {tag}</span>
           {custom && <div className={styles.actions}>
             <Button size="small" disabled={busy || index === 0} aria-label={`上移 ${tag}`} onClick={() => change({ order: movePriorityNode(order, index, index - 1) })}>↑</Button>
             <Button size="small" disabled={busy || index === order.length - 1} aria-label={`下移 ${tag}`} onClick={() => change({ order: movePriorityNode(order, index, index + 1) })}>↓</Button>
@@ -102,7 +103,7 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
       </ol>
       {custom && nodes.some(tag => !order.includes(tag)) && <Field label="加入备用节点"><Select value="" placeholder="选择要加入的节点" disabled={busy}
         options={nodes.filter(tag => !order.includes(tag)).map(tag => ({ value: tag, label: tag }))} onChange={tag => change({ order: [...order, tag] })} /></Field>}
-      <p>可拖动或使用上下按钮排序。当前节点首次失败后会连续复核，再按设定轮数切换；全部失败时不会转为直连。手动选节点会暂停自动切换。</p>
+      <p>可拖动或使用上下按钮排序。当前节点首次失败后会连续复核，再按设定轮数切换；全部失败时不会转为直连。手动选中顺序内节点会将其设为当前首选，故障时仍自动切换，恢复后再切回；从顺序中移除的节点不受监测。</p>
       <details><summary>高级参数</summary><div className={styles.grid}>
         {numbers.map(item => <Field key={item.key} label={`${item.label} · ${item.min}–${item.max}`}><input className="input" type="number" min={item.min} max={item.max} step={1} disabled={busy}
           value={Number.isFinite(draft[item.key]) ? draft[item.key] / (item.seconds ? 1000 : 1) : ""}
@@ -119,7 +120,7 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
     </>}
     {confirm && <Dialog onClose={() => setConfirm(false)}>
       <h2>重载代理？</h2>
-      <p>会短暂中断现有连接，应用已保存的策略，并解除手动选择暂停。</p>
+      <p>会短暂中断现有连接并应用已保存的策略；当前首选若仍在节点顺序中会保留。</p>
       <div className={styles.actions}><Button onClick={() => setConfirm(false)}>取消</Button><Button variant="primary" onClick={() => void apply()}>确认重载</Button></div>
     </Dialog>}
   </section>;
