@@ -379,20 +379,22 @@ function UpdateSettingsSection({ host }: { host: DesktopHost }) {
     <div>
       <div className="list-section-title">{t("Update")}</div>
       <div className={styles.settingsList}>
-        <div className="settings-row">
-          <span className="settings-row-label">{t("Update Track")}</span>
-          <Select<DesktopUpdateTrack>
-            inline
-            options={[
-              { value: "stable", label: t("Stable") },
-              { value: "beta", label: t("Beta") },
-            ]}
-            value={updates.track}
-            onChange={(track) => {
-              void host.updates.setTrack(track).catch(showError);
-            }}
-          />
-        </div>
+        {updates.trackSelectable && (
+          <div className="settings-row">
+            <span className="settings-row-label">{t("Update Track")}</span>
+            <Select<DesktopUpdateTrack>
+              inline
+              options={[
+                { value: "stable", label: t("Stable") },
+                { value: "beta", label: t("Beta") },
+              ]}
+              value={updates.track}
+              onChange={(track) => {
+                void host.updates.setTrack(track).catch(showError);
+              }}
+            />
+          </div>
+        )}
         {updates.githubTokenSupported && (
           <button type="button" className="settings-row" onClick={editGitHubToken}>
             <span className="settings-row-label">{t("GitHub Token")}</span>

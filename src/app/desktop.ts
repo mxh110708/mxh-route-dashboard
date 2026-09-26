@@ -153,6 +153,7 @@ export interface DesktopUpdateInfo {
 export interface DesktopUpdatesState {
   supported: boolean;
   githubTokenSupported: boolean;
+  trackSelectable: boolean;
   track: DesktopUpdateTrack;
   checkUpdateEnabled: boolean;
   prompted: boolean;
