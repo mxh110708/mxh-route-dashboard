@@ -23,6 +23,7 @@ import {
 import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { StreamBanner } from "../components/StreamBanner";
+import { WindowsProxyStatus } from "../components/WindowsProxyStatus";
 import { AdaptiveSegmented, Button, Card, DataLine, Dialog, EmptyState, IconButton, Sparkline } from "../components/ui";
 import { ServiceStatus_Type } from "../gen/daemon/started_service_pb";
 import { ProfileCard } from "./ProfileViews";
@@ -230,7 +231,7 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
 
 function CaptureModeCard(props: { host: DesktopHost }) {
   const { t } = useI18n();
-  const { captureMode } = useDesktopProfiles(props.host);
+  const { captureMode, windowsProxyHealth } = useDesktopProfiles(props.host);
   const [currentMode, setPendingMode] = usePendingValue(captureMode);
   const [busy, setBusy] = useState(false);
 
@@ -259,6 +260,13 @@ function CaptureModeCard(props: { host: DesktopHost }) {
             .finally(() => setBusy(false));
         }}
       />
+      {captureMode === "system-proxy" && (
+        <WindowsProxyStatus health={windowsProxyHealth} busy={busy}
+          reapply={props.host.profiles.reapplySystemProxy ? () => {
+            setBusy(true);
+            props.host.profiles.reapplySystemProxy!().catch(showError).finally(() => setBusy(false));
+          } : undefined} />
+      )}
     </Card>
   );
 }

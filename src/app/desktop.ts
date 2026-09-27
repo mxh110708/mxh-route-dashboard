@@ -70,6 +70,7 @@ export interface DesktopProfilesState {
   selectedId: string | null;
   profiles: DesktopProfile[];
   captureMode: DesktopCaptureMode;
+  windowsProxyHealth?: "inactive" | "unsupported" | "healthy" | "confirming" | "repairing" | "foreign" | "suspended" | "unknown";
 }
 
 export interface DesktopServer {
@@ -338,6 +339,7 @@ export interface DesktopHost {
     priorityState?(): Promise<DesktopPriorityState>;
     prioritySave?(settings: DesktopPrioritySettings, revision: string, profileId: string | null): Promise<DesktopPriorityState>;
     priorityApply?(revision: string, profileId: string | null): Promise<void>;
+    reapplySystemProxy?(): Promise<void>;
     list(): Promise<DesktopProfilesState>;
     onChanged(listener: () => void): () => void;
     create(init: DesktopProfileCreate): Promise<void>;
