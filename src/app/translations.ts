@@ -12,6 +12,7 @@ export const LANGUAGES: { value: Language; label: string }[] = [
 ];
 
 export const TRANSLATIONS = {
+  "Automatic Failover": { "zh-Hans": "自动故障切换", "zh-Hant": "自動故障切換", "fa": "تغییر مسیر خودکار", "ru": "Автоматическое переключение" },
   "Overview": { "zh-Hans": "概述", "zh-Hant": "概述", "fa": "نمای کلی", "ru": "Обзор" },
   "Groups": { "zh-Hans": "组", "zh-Hant": "組", "fa": "گروه‌ها", "ru": "Группы" },
   "Connections": { "zh-Hans": "连接", "zh-Hant": "連接", "fa": "اتصال‌ها", "ru": "Подключения" },

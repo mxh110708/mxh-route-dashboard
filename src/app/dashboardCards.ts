@@ -8,6 +8,7 @@ export type DashboardCardId =
   | "status"
   | "connections"
   | "systemProxy"
+  | "priorityFailover"
   | "clashMode"
   | "profile";
 
@@ -28,6 +29,7 @@ export const DASHBOARD_CARDS: Record<
   status: { title: "Status", icon: "bug_report", pairGroup: "statistics" },
   connections: { title: "Connections", icon: "cable", pairGroup: "statistics" },
   systemProxy: { title: "Traffic Capture", icon: "router", desktop: true },
+  priorityFailover: { title: "Automatic Failover", icon: "tune", desktop: true },
   clashMode: { title: "Routing Mode", icon: "route" },
   profile: { title: "Profile", icon: "folder", desktop: true, permanent: true },
 };
@@ -38,6 +40,7 @@ const DEFAULT_CARD_ORDER: DashboardCardId[] = [
   "status",
   "connections",
   "systemProxy",
+  "priorityFailover",
   "clashMode",
   "profile",
 ];
@@ -69,6 +72,8 @@ export function loadDashboardCardsConfig(desktop: boolean): DashboardCardsConfig
       (card): card is string => typeof card === "string" && known.has(card),
     );
     const ordered = new Set(order);
+    // Introduce the new entry once, but respect a later user decision to hide it.
+    if (desktop && !ordered.has("priorityFailover")) enabled.push("priorityFailover");
     order = order.concat(defaults.filter((card) => !ordered.has(card)));
     const enabledCards = new Set(enabled);
     for (const card of defaults) {

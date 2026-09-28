@@ -27,6 +27,7 @@ import { WindowsProxyStatus } from "../components/WindowsProxyStatus";
 import { AdaptiveSegmented, Button, Card, DataLine, Dialog, EmptyState, IconButton, Sparkline } from "../components/ui";
 import { ServiceStatus_Type } from "../gen/daemon/started_service_pb";
 import { ProfileCard } from "./ProfileViews";
+import { PrioritySummaryCard } from "./PrioritySummaryCard";
 import styles from "./OverviewView.module.css";
 import { cx } from "../lib/cx";
 
@@ -84,6 +85,7 @@ export function OverviewView() {
           {orderedEnabledCards(cardsConfig).includes("systemProxy") && (
             <CaptureModeCard host={host} />
           )}
+          {orderedEnabledCards(cardsConfig).includes("priorityFailover") && <PrioritySummaryCard host={host} />}
         </div>
       ) : (
         stateLabel !== null && <EmptyState icon="dashboard">{stateLabel}</EmptyState>
@@ -116,6 +118,8 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
 
   const isCardVisible = (card: string) => {
     switch (card) {
+      case "priorityFailover":
+        return !!props.host?.profiles.priorityState;
       case "systemProxy":
       case "profile":
         return props.host !== null;
@@ -128,6 +132,8 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
 
   const renderCard = (card: string, wide: boolean) => {
     switch (card) {
+      case "priorityFailover":
+        return props.host ? <PrioritySummaryCard key={card} host={props.host} /> : null;
       case "uploadTraffic":
         return (
           <Card key={card} icon="upload" title={t("Upload")} wide={wide}>

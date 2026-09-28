@@ -1,0 +1,31 @@
+import { describe, expect, it } from "vitest";
+import type { DesktopPriorityState } from "../app/desktop";
+import { priorityStatus } from "./priorityStatus";
+
+const view: DesktopPriorityState = {
+  settings: { enabled: true, group: "Entry", order: [], failureRounds: 3, backupSuccessRounds: 2, recoverySuccessRounds: 3, recoveryStableMs: 120000, failbackCooldownMs: 60000, probeTimeoutMs: 8000, healthyIntervalMs: 30000, failureIntervalMs: 10000 },
+  revision: "1", profileId: "test", groups: [], path: "test.json", running: true,
+  directMode: false, active: true, preferred: "main", monitoredSelected: true,
+  needsReload: false, selected: "main", lastSwitch: null,
+};
+
+describe("priority running status", () => {
+  it("describes manual preference without claiming it is unhealthy", () => {
+    expect(priorityStatus({ ...view, selected: "manual", preferred: "manual" }).label).toBe("自动监测中");
+  });
+  it("distinguishes backup and unmonitored nodes", () => {
+    expect(priorityStatus({ ...view, selected: "backup" }).label).toBe("备用运行 · 等待切回");
+    expect(priorityStatus({ ...view, selected: "outside", monitoredSelected: false }).label).toBe("当前节点未受监测");
+  });
+  it("does not confuse saved settings with the running policy", () => {
+    expect(priorityStatus({ ...view, settings: { ...view.settings, enabled: false }, needsReload: true }).label).toBe("自动监测中");
+    expect(priorityStatus({ ...view, active: false, needsReload: true }).label).toBe("监测未启用");
+  });
+  it("never shows monitoring for a stopped proxy or direct mode", () => {
+    expect(priorityStatus({ ...view, running: false }).label).toBe("代理未运行");
+    expect(priorityStatus({ ...view, directMode: true }).label).toBe("直连模式 · 已暂停");
+  });
+  it("does not invent monitoring when the selection is unavailable", () => {
+    expect(priorityStatus({ ...view, selected: null }).label).toBe("等待节点状态");
+  });
+});

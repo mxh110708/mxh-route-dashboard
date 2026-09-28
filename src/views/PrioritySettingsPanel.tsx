@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import type { DesktopHost, DesktopPrioritySettings, DesktopPriorityState } from "../app/desktop";
-import { Button, Dialog, Field, Select } from "../components/ui";
+import { Button, Dialog, Field, Select, Switch } from "../components/ui";
 import { movePriorityNode, priorityDraftError } from "./prioritySettingsModel";
+import { priorityStatus } from "./priorityStatus";
+import { Icon } from "../components/Icon";
 import styles from "./PrioritySettingsPanel.module.css";
 
 type NumberKey = Exclude<keyof DesktopPrioritySettings, "enabled" | "group" | "order">;
 const numbers: { key: NumberKey; label: string; min: number; max: number; seconds?: boolean }[] = [
-  { key: "failureRounds", label: "当前节点连续失败轮数", min: 1, max: 20 },
-  { key: "backupSuccessRounds", label: "备用节点连续成功轮数", min: 1, max: 20 },
-  { key: "recoverySuccessRounds", label: "首选恢复连续成功轮数", min: 1, max: 20 },
+  { key: "failureRounds", label: "故障确认次数", min: 1, max: 20 },
+  { key: "backupSuccessRounds", label: "备用连续成功次数", min: 1, max: 20 },
+  { key: "recoverySuccessRounds", label: "恢复连续成功次数", min: 1, max: 20 },
   { key: "recoveryStableMs", label: "切回前稳定时间（秒）", min: 10, max: 3600, seconds: true },
   { key: "failbackCooldownMs", label: "切回冷却时间（秒）", min: 10, max: 3600, seconds: true },
   { key: "probeTimeoutMs", label: "单次探测超时（秒）", min: 1, max: 60, seconds: true },
-  { key: "healthyIntervalMs", label: "正常时轮间等待（秒）", min: 5, max: 600, seconds: true },
-  { key: "failureIntervalMs", label: "常规异常轮间等待（秒）", min: 5, max: 600, seconds: true },
+  { key: "healthyIntervalMs", label: "正常探测间隔（秒）", min: 5, max: 600, seconds: true },
+  { key: "failureIntervalMs", label: "异常探测间隔（秒）", min: 5, max: 600, seconds: true },
 ];
 
 export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
@@ -28,7 +30,14 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
   const [confirm, setConfirm] = useState(false);
   const generation = useRef(0);
   const mutating = useRef(false);
-  const dragging = useRef<number | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const dragStart = useRef(0);
+  const dragActive = useRef(false);
+  const dragTarget = useRef<string | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
+  const nodeList = useRef<HTMLOListElement>(null);
+  const cancelDrag = () => { dragActive.current = false; setDragging(null); setDropTarget(null); dragTarget.current = null; setDragOffset(0); };
   const accept = (value: DesktopPriorityState) => {
     setView(value); setBase(value); setDraft(value.settings); setCustom(value.settings.order.length > 0);
   };
@@ -66,34 +75,58 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
     try { await api.priorityApply!(base.revision, base.profileId); accept(await api.priorityState!()); setMessage("代理已重新加载，保存的策略已应用。"); }
     catch (reason) { setError(`已保存，但未确认重载完成：${String(reason)}`); } finally { mutating.current = false; setBusy(false); }
   };
-  return <section className={styles.panel} aria-labelledby="priority-title">
-    <div className={styles.heading}><div><h2 id="priority-title">自动故障切换</h2><p>按优先级选择入口，手动选择可改变当前首选；稳定恢复后切回。不以最低延迟排名。</p></div>
-      {draft && <button className={draft.enabled ? "switch on" : "switch"} role="switch" aria-label="启用自动故障切换" aria-checked={draft.enabled} disabled={busy} onClick={() => change({ enabled: !draft.enabled })} />}
-    </div>
+  const status = view ? priorityStatus(view) : null;
+  return <section className={styles.panel} aria-label="自动故障切换设置">
     {error && <p role="alert">{error}</p>}
     {!draft || !view || !base ? <p>正在读取策略配置…</p> : <>
-      <div className={styles.status} aria-live="polite">
-        <strong>{!view.running ? "代理未运行" : view.directMode ? "Direct 模式下已暂停" : !view.active ? "监测未启用" : view.selected && !view.monitoredSelected ? "当前节点未纳入自动切换顺序" : view.selected && view.preferred && view.selected !== view.preferred ? "备用运行中，等待首选恢复" : "自动监测中"}</strong>
-        <span>当前运行节点：{view.selected ?? "—"}</span>
-        {view.active && <span>当前首选：{view.preferred ?? "—"}</span>}
-        {view.needsReload && <span>有待重载的策略配置</span>}
-        {view.lastSwitch && <span>最近切换：{view.lastSwitch.from} → {view.lastSwitch.to} · {view.lastSwitch.reason} · {new Date(view.lastSwitch.at).toLocaleTimeString()}</span>}
+      <div className={`nav-list ${styles.group}`}>
+        <div className={styles.row}>
+          <div className={styles.rowLabel}>启用自动故障切换<p>入口故障时切换备用，首选稳定恢复后切回。</p></div>
+          <Switch label="启用自动故障切换" value={draft.enabled} disabled={busy} onChange={enabled => change({ enabled })} />
+        </div>
+        <div className={styles.row} aria-live="polite"><span className={styles.muted}>运行状态</span><span className={styles.state} data-tone={status!.tone}>{status!.label}</span></div>
+        <div className={styles.row}><span className={styles.muted}>当前节点</span><span className={styles.value}>{view.running ? view.selected ?? "—" : "—"}</span></div>
+        {view.active && <div className={styles.row}><span className={styles.muted}>当前首选</span><span className={styles.value}>{view.preferred === view.selected && view.preferred ? "与当前节点相同" : view.preferred ?? "—"}</span></div>}
+        {view.lastSwitch && <details className={styles.details}><summary>最近切换<span className={styles.summaryHint}>{new Date(view.lastSwitch.at).toLocaleTimeString()}</span></summary><div className={styles.detailBody}><p>{view.lastSwitch.from} → {view.lastSwitch.to}</p><p>{view.lastSwitch.reason}</p></div></details>}
       </div>
+      {view.active && view.selected && !view.monitoredSelected && <p role="alert">当前节点不在运行策略的顺序中，不受自动切换保护。请将其加入顺序，保存后重载。</p>}
+      {view.needsReload && <p role="status">已保存的策略尚未应用，重载代理或下次启动后生效。</p>}
       {conflict && <p role="alert">配置文件或当前配置已在其他位置变化，请刷新后再保存。</p>}
       {dirty && <p>有未保存修改，当前运行策略不受影响。</p>}
       {draft.group && !view.groups.some(group => group.tag === draft.group) && <p role="alert">已保存的分组“{draft.group}”不存在或不符合入口代理组结构，请重新选择；不会自动改用其他分组。</p>}
-      <Field label="目标入口分组"><Select value={view.groups.some(group => group.tag === draft.group) ? draft.group : ""} placeholder="请选择入口代理组" disabled={busy} options={[
+      <div>
+      <div className="list-section-title">入口与顺序</div>
+      <div className={`nav-list ${styles.group}`}>
+      <div className={styles.controlRow}><Field label="入口代理组"><Select value={view.groups.some(group => group.tag === draft.group) ? draft.group : ""} placeholder="请选择入口代理组" disabled={busy} options={[
         ...view.groups.map(group => ({ value: group.tag, label: group.tag })),
-      ]} onChange={group => { change({ group, order: [] }); setCustom(false); }} /></Field>
-      <p>从当前代理配置读取，仅列出成员全部为实际代理节点的分组；业务、汇总、直连和混合分组不参与。{view.groups.length === 0 && "当前配置没有符合条件的入口组。"}</p>
-      <label className={styles.mode}><input type="checkbox" checked={custom} disabled={busy} onChange={event => {
-        setCustom(event.target.checked); change({ order: event.target.checked ? [...nodes] : [] });
-      }} />自定义优先级（否则跟随组内排列）</label>
-      <ol className={styles.nodes} aria-label="节点优先级">
-        {order.map((tag, index) => <li key={tag} draggable={custom && !busy} onDragStart={event => { dragging.current = index; event.dataTransfer.setData("text/plain", String(index)); }} onDragEnd={() => { dragging.current = null; }}
-          onDragOver={event => { if (custom && !busy) event.preventDefault(); }} onDrop={event => {
-            event.preventDefault(); if (custom && !busy && dragging.current !== null) change({ order: movePriorityNode(order, dragging.current, index) }); dragging.current = null;
-          }}><span className={styles.nodeName}>{index === 0 ? "配置首选" : `配置备用 ${index}`} · {tag}</span>
+      ]} onChange={group => { change({ group, order: [] }); setCustom(false); }} /></Field></div>
+      <div className={styles.row}><div className={styles.rowLabel}>自定义顺序<p>{custom ? "拖动节点或使用箭头调整顺序。" : "跟随当前配置中的组内排列。"}</p></div><Switch label="自定义顺序" value={custom} disabled={busy} onChange={value => {
+        setCustom(value); change({ order: value ? [...nodes] : [] });
+      }} /></div>
+      <ol ref={nodeList} className={styles.nodes} aria-label="节点优先级">
+        {order.map((tag, index) => <li key={tag} data-node={tag} data-dragging={dragging === tag || undefined}
+          style={dragging === tag ? { transform: `translateY(${dragOffset}px)` } : undefined}
+          data-drop={dropTarget === tag && dragging !== tag ? (order.indexOf(dragging!) < index ? "after" : "before") : undefined}
+          >
+          {custom && <button type="button" className={styles.dragHandle} disabled={busy} aria-label={`拖动排序 ${tag}`} title="拖动排序；键盘可用上下方向键"
+            onPointerDown={event => { if (event.button !== 0) return; event.currentTarget.setPointerCapture(event.pointerId); dragActive.current = true; dragTarget.current = null; dragStart.current = event.clientY; setDragging(tag); setDragOffset(0); }}
+            onPointerMove={event => {
+              if (!dragActive.current || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
+              setDragOffset(event.clientY - dragStart.current);
+              const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLLIElement>("li[data-node]");
+              const targetTag = target && nodeList.current?.contains(target) ? target.dataset.node ?? null : null;
+              dragTarget.current = targetTag; setDropTarget(targetTag);
+            }}
+            onPointerUp={event => {
+              if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+              if (dragActive.current && custom && !busy && dragTarget.current) change({ order: movePriorityNode(order, order.indexOf(tag), order.indexOf(dragTarget.current)) });
+              event.currentTarget.releasePointerCapture(event.pointerId); cancelDrag();
+            }} onPointerCancel={cancelDrag} onLostPointerCapture={cancelDrag}
+            onKeyDown={event => {
+              if (event.key === "Escape") { cancelDrag(); return; }
+              if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); change({ order: movePriorityNode(order, index, index + (event.key === "ArrowUp" ? -1 : 1)) }); }
+            }}><Icon name="drag_handle" /></button>}
+          <span className={styles.rank} aria-label={`优先级 ${index + 1}`}>{String(index + 1).padStart(2, "0")}</span><span className={styles.nodeName}>{tag}<span className={styles.nodeHint}>{index === 0 ? "默认首选" : `备用 ${index}`}</span></span>
           {custom && <div className={styles.actions}>
             <Button size="small" disabled={busy || index === 0} aria-label={`上移 ${tag}`} onClick={() => change({ order: movePriorityNode(order, index, index - 1) })}>↑</Button>
             <Button size="small" disabled={busy || index === order.length - 1} aria-label={`下移 ${tag}`} onClick={() => change({ order: movePriorityNode(order, index, index + 1) })}>↓</Button>
@@ -101,22 +134,35 @@ export function PrioritySettingsPanel({ host }: { host: DesktopHost }) {
           </div>}
         </li>)}
       </ol>
-      {custom && nodes.some(tag => !order.includes(tag)) && <Field label="加入备用节点"><Select value="" placeholder="选择要加入的节点" disabled={busy}
-        options={nodes.filter(tag => !order.includes(tag)).map(tag => ({ value: tag, label: tag }))} onChange={tag => change({ order: [...order, tag] })} /></Field>}
-      <p>可拖动或使用上下按钮排序。当前节点首次失败后会连续复核，再按设定轮数切换；全部失败时不会转为直连。手动选中顺序内节点会将其设为当前首选，故障时仍自动切换，恢复后再切回；从顺序中移除的节点不受监测。</p>
-      <details><summary>高级参数</summary><div className={styles.grid}>
-        {numbers.map(item => <Field key={item.key} label={`${item.label} · ${item.min}–${item.max}`}><input className="input" type="number" min={item.min} max={item.max} step={1} disabled={busy}
-          value={Number.isFinite(draft[item.key]) ? draft[item.key] / (item.seconds ? 1000 : 1) : ""}
-          onChange={event => change({ [item.key]: event.target.value === "" ? NaN : Number(event.target.value) * (item.seconds ? 1000 : 1) })} /></Field>)}
+      {order.length === 0 && <p className={styles.empty}>暂无参与节点，请先选择入口代理组。</p>}
+      {custom && nodes.some(tag => !order.includes(tag)) && <div className={styles.controlRow}><Field label="加入备用节点"><Select value="" placeholder="选择要加入的节点" disabled={busy}
+        options={nodes.filter(tag => !order.includes(tag)).map(tag => ({ value: tag, label: tag }))} onChange={tag => change({ order: [...order, tag] })} /></Field></div>}
+      </div>
+      <p className={styles.caption}>手动选中顺序内节点后，以该节点为首选；故障时跳过当前节点，按此顺序选择健康备用。</p>
+      {view.groups.length === 0 && <p role="alert">当前配置没有符合条件的入口代理组。</p>}
+      </div>
+      <div className={`nav-list ${styles.group}`}>
+      <details className={styles.details}><summary>切换规则<span className={styles.summaryHint}>探测与恢复</span></summary><div className={styles.detailBody}>
+        <p>分组从当前配置读取，仅包含实际代理节点；业务、汇总、直连和混合组不参与。从自定义顺序移除的节点不受监测。</p>
+        <p>当前节点独立探测，不等待备用探测完成。首次失败后约 1 秒再次复核，达到设定次数才切换；1 秒不包含探测耗时，不代表 1 秒内完成切换。</p>
+        <p>每次探测需三个 HTTPS 目标中至少两个成功。备用须连续通过检测，且跳过当前节点；全部不可用时保持当前选择，不转为直连，也不按最低延迟排名。</p>
+        <p>手动改选受监测节点会更新当前首选，仍受故障切换保护。恢复需同时满足连续成功、稳定时间和冷却条件；自动重载保留当前首选。</p>
       </div></details>
+      <details className={styles.details}><summary>高级参数<span className={styles.summaryHint}>确认次数 · 探测间隔</span></summary><div className={styles.detailBody}>
+      <p>次数按各节点连续探测结果计算。异常间隔用于常规重试，不影响当前节点首次失败后的快速复核。</p><div className={styles.grid}>
+        {numbers.map(item => <div key={item.key}><Field label={item.label}><input className="input" type="number" min={item.min} max={item.max} step={1} disabled={busy} aria-describedby={`priority-${item.key}-range`}
+          value={Number.isFinite(draft[item.key]) ? draft[item.key] / (item.seconds ? 1000 : 1) : ""}
+          onChange={event => change({ [item.key]: event.target.value === "" ? NaN : Number(event.target.value) * (item.seconds ? 1000 : 1) })} /></Field><p className={styles.range} id={`priority-${item.key}-range`}>{item.min}–{item.max}{item.seconds ? " 秒" : " 次"}</p></div>)}
+      </div></div></details>
+      <details className={styles.details}><summary>配置文件</summary><div className={styles.detailBody}><p className={styles.path}>{view.path}</p></div></details>
+      </div>
       {validation && <p role="alert">{validation}</p>}
       {message && <p role="status">{message}</p>}
       <div className={styles.actions}>
         <Button variant="primary" disabled={busy || !dirty || conflict || !!validation} onClick={() => void save()}>保存配置</Button>
-        <Button disabled={busy || dirty || conflict || !view.running} onClick={() => setConfirm(true)}>重载代理应用</Button>
+        <Button disabled={busy || dirty || conflict || !view.running} onClick={() => setConfirm(true)}>重载并应用</Button>
         <Button disabled={busy} onClick={() => void refresh()}>{dirty ? "放弃未保存修改并刷新" : "刷新"}</Button>
       </div>
-      <p className={styles.path}>配置文件：{view.path}</p>
     </>}
     {confirm && <Dialog onClose={() => setConfirm(false)}>
       <h2>重载代理？</h2>
