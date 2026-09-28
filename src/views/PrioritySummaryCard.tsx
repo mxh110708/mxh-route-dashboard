@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { DesktopHost, DesktopPriorityState } from "../app/desktop";
 import { navigate } from "../app/context";
+import { priorityOverviewPath } from "../app/priorityNavigation";
 import { Icon } from "../components/Icon";
 import { priorityStatus } from "./priorityStatus";
 import styles from "./PrioritySummaryCard.module.css";
@@ -27,7 +28,7 @@ export function PrioritySummaryCard({ host }: { host: DesktopHost }) {
     return () => { stopped = true; clearTimeout(timer); };
   }, [read]);
   if (!read) return null;
-  return <PrioritySummaryContent view={view} failed={failed} onOpen={() => navigate("settings/priority-failover")} />;
+  return <PrioritySummaryContent view={view} failed={failed} onOpen={() => navigate(priorityOverviewPath)} />;
 }
 
 export function PrioritySummaryContent({ view, failed, onOpen }: {

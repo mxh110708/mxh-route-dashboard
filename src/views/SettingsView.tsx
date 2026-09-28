@@ -121,11 +121,12 @@ export function SettingsView() {
   );
 }
 
-export function PrioritySettingsView() {
+export function PrioritySettingsView({ returnTo = "settings" }: { returnTo?: "overview" | "settings" }) {
   const host = useLocalDesktopHost();
+  const { t } = useI18n();
   return (
     <div className="page">
-      <SettingsPageHeader title="自动故障切换" />
+      <SettingsPageHeader title="自动故障切换" back={returnTo} backLabel={t(returnTo === "overview" ? "Overview" : "Settings")} />
       <div className="settings-stack">
         {host?.profiles.priorityState ? (
           <PrioritySettingsPanel host={host} />

@@ -12,6 +12,7 @@ import { formatDateTime, formatUptime, isHttpUrl } from "./api/format";
 import { isTerminalCode, useStream, type StreamStore } from "./api/stream";
 import { ServiceStatus_Type, type DeprecatedWarning } from "./gen/daemon/started_service_pb";
 import { CapabilitiesContext, makeCapabilities } from "./app/capabilities";
+import { priorityReturnPage } from "./app/priorityNavigation";
 import {
   ApiContext,
   applyAccent,
@@ -134,7 +135,7 @@ export type Route =
   | { page: "settings" }
   | { page: "settings/app" }
   | { page: "settings/core" }
-  | { page: "settings/priority-failover" }
+  | { page: "settings/priority-failover"; returnTo: "overview" | "settings" }
   | { page: "settings/preferences" }
   | { page: "settings/preferences/terminal" }
   | { page: "settings/preferences/terminal/theme"; scheme: "light" | "dark" }
@@ -255,7 +256,7 @@ function routeFromHash(locationHash: string): Route {
         case "core":
           return { page: "settings/core" };
         case "priority-failover":
-          return { page: "settings/priority-failover" };
+          return { page: "settings/priority-failover", returnTo: priorityReturnPage(query) };
         case "preferences":
           if (segments[2] === "terminal") {
             if (segments[3] === "theme" && (segments[4] === "light" || segments[4] === "dark")) {
@@ -915,7 +916,7 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
         />
       )}
       {route.page === "settings/core" && <CoreView />}
-      {route.page === "settings/priority-failover" && <PrioritySettingsView />}
+      {route.page === "settings/priority-failover" && <PrioritySettingsView returnTo={route.returnTo} />}
       {route.page === "settings/preferences" && (
         <PreferencesView
           theme={props.theme}
