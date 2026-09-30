@@ -27,6 +27,20 @@ export interface DaemonConnectionState {
 export type DesktopProfileType = "local" | "remote";
 export type DesktopCaptureMode = "system-proxy" | "tun";
 
+export interface DesktopProxyPorts {
+  mixed: { enabled: true; port: number };
+  socks: { enabled: boolean; port: number };
+  http: { enabled: boolean; port: number };
+}
+export interface DesktopProxyPortState {
+  profileId: string | null;
+  profileName: string | null;
+  revision: string;
+  ports: DesktopProxyPorts | null;
+  running: boolean;
+  busy: boolean;
+}
+
 export interface DesktopPrioritySettings {
   enabled: boolean;
   group: string;
@@ -336,6 +350,8 @@ export interface DesktopHost {
     triggerOOMReport(): Promise<void>;
   };
   profiles: {
+    proxyPortState?(): Promise<DesktopProxyPortState>;
+    proxyPortSave?(ports: DesktopProxyPorts, revision: string, profileId: string, running: boolean): Promise<DesktopProxyPortState>;
     priorityState?(): Promise<DesktopPriorityState>;
     prioritySave?(settings: DesktopPrioritySettings, revision: string, profileId: string | null): Promise<DesktopPriorityState>;
     priorityApply?(revision: string, profileId: string | null): Promise<void>;

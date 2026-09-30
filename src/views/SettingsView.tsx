@@ -65,6 +65,9 @@ export function SettingsView() {
               onClick={() => navigate("settings/core")}
             />
           )}
+          {localHost?.profiles.proxyPortState && (
+            <NavRow icon="router" title={t("Port Settings")} onClick={() => navigate("settings/ports")} />
+          )}
           <NavRow
             icon="dns"
             title={host !== null ? t("Remote Control") : t("Servers")}
@@ -485,7 +488,7 @@ function UpdateSettingsSection({ host }: { host: DesktopHost }) {
   );
 }
 
-function SettingsPageHeader(props: {
+export function SettingsPageHeader(props: {
   title: string;
   action?: ReactNode;
   back?: string;

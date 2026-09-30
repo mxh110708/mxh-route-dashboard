@@ -81,6 +81,7 @@ import {
   powerReportTitle,
 } from "./views/reportFormat";
 import { OverviewView } from "./views/OverviewView";
+import { ProxyPortSettingsView } from "./views/ProxyPortSettingsView";
 import {
   ImportProfileFileDialog,
   ImportRemoteProfileDialog,
@@ -135,6 +136,7 @@ export type Route =
   | { page: "settings" }
   | { page: "settings/app" }
   | { page: "settings/core" }
+  | { page: "settings/ports" }
   | { page: "settings/priority-failover"; returnTo: "overview" | "settings" }
   | { page: "settings/preferences" }
   | { page: "settings/preferences/terminal" }
@@ -255,6 +257,8 @@ function routeFromHash(locationHash: string): Route {
           return { page: "settings/app" };
         case "core":
           return { page: "settings/core" };
+        case "ports":
+          return { page: "settings/ports" };
         case "priority-failover":
           return { page: "settings/priority-failover", returnTo: priorityReturnPage(query) };
         case "preferences":
@@ -359,6 +363,8 @@ function routeTitle(route: Route, t: Translate, language: string): string {
       return t("App");
     case "settings/core":
       return t("Core");
+    case "settings/ports":
+      return t("Port Settings");
     case "settings/priority-failover":
       return "自动故障切换";
     case "settings/preferences":
@@ -916,6 +922,7 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
         />
       )}
       {route.page === "settings/core" && <CoreView />}
+      {route.page === "settings/ports" && <ProxyPortSettingsView />}
       {route.page === "settings/priority-failover" && <PrioritySettingsView returnTo={route.returnTo} />}
       {route.page === "settings/preferences" && (
         <PreferencesView
